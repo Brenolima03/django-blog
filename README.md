@@ -1,6 +1,9 @@
 # Start a new Django project inside the current directory
 django-admin startproject project .
 
+# Start a new Django app named 'blog' inside the project
+docker-compose run --rm django-app python manage.py startapp blog
+
 # Build and start containers in the foreground
 docker-compose up --build
 
