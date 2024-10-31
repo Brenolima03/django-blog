@@ -29,7 +29,7 @@
     // Should user class="my_code" and data-language="python"
     // Tested: xml, css, python and javascript
     // Ex.:
-    const codes = document.querySelectorAll('.my_code');
+    const codes = document.querySelectorAll(".my_code");
     for (const code of codes) {
       const language = code.dataset.language || null;
       const text = code.textContent || code.innerText;
@@ -39,7 +39,7 @@
         mode: language,
         // language: "TypeScript",
         // mime: "application/typescript",
-        theme: 'dracula',
+        theme: "dracula",
         lineNumbers: true,
         styleActiveLine: true,
         styleActiveSelected: true,
@@ -284,10 +284,10 @@ tria?
 </dl>
 <pre class="my_code" data-language="python">
 import os
-os.environ.setdefault('DJANGO_ALLOWED_HOSTS',
-                      'abc,  def,      https://www.host.com.br/,  ')
+os.environ.setdefault("DJANGO_ALLOWED_HOSTS",
+                      "abc,  def,      https://www.host.com.br/,  ")
 ALLOWED_HOSTS = [
-    h.strip() for h in os.getenv('DJANGO_ALLOWED_HOSTS', '').split(',')
+    h.strip() for h in os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
     if h.strip()
 ]
 print(ALLOWED_HOSTS)</pre
