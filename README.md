@@ -30,3 +30,6 @@ docker-compose run --rm django-app python manage.py createsuperuser
 
 # Enter the running Django app container's shell
 docker exec -it django-app /bin/sh
+
+# Rebuild containers from scratch, removing anonymous volumes to clear data and recreate all services even if configuration hasn't changed
+docker-compose up --build --renew-anon-volumes --force-recreate
