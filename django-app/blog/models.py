@@ -122,7 +122,6 @@ class Post(models.Model):
     if not self.is_published:
       return reverse("blog:index")
     return reverse("blog:post", args=(self.slug,))
-  
 
   def save(self, *args, **kwargs):
     if not self.slug:
