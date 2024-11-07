@@ -1,7 +1,6 @@
 from typing import Any
 from django.core.paginator import Paginator
 from django.db.models.query import QuerySet
-from django.http import Http404
 from django.shortcuts import get_object_or_404, render
 from django.db.models import Q
 from django.contrib.auth.models import User
@@ -73,20 +72,21 @@ class CategoryListView(PostListView):
     })
     return context
 
-def tag(request, slug):
-  posts = Post.objects.get_published().filter(tags__slug=slug)
-  page_obj = paginate_queryset(request, posts)
-  if not page_obj:
-    raise Http404()
-  page_title = f"{page_obj[0].tags.first().name} - Tag - "
-  return render(
-    request,
-    "blog/pages/index.html",
-    {
-      "page_obj": page_obj,
+class TagListView(PostListView):
+  allow_empty = False
+
+  def get_queryset(self) -> QuerySet[Any]:
+    return super().get_queryset().filter(
+      tags__slug=self.kwargs.get("slug")
+    )
+
+  def get_context_data(self, **kwargs) -> dict[str, Any]:
+    context = super().get_context_data(**kwargs)
+    page_title = f"{self.object_list[0].tags.first().name} - Category - "
+    context.update({
       "page_title": page_title
-    }
-  )
+    })
+    return context
 
 def search(request):
   search_value = request.GET.get("search", "").strip()
