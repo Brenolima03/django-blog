@@ -75,13 +75,23 @@ class TagListView(PostListView):
   allow_empty = False
 
   def get_queryset(self) -> QuerySet[Any]:
+    # Filter posts by the specific tag slug from the URL
     return super().get_queryset().filter(
       tags__slug=self.kwargs.get("slug")
     )
 
   def get_context_data(self, **kwargs) -> dict[str, Any]:
     context = super().get_context_data(**kwargs)
-    page_title = f"{self.object_list[0].tags.first().name} - Category - "
+    
+    # Extract the tag name from the first post's tags in the filtered queryset
+    first_post = self.object_list.first()
+    tag_name = (
+      first_post.tags.filter(slug=self.kwargs.get("slug")).first().name
+      if first_post else "Unknown Tag"
+    )
+    
+    # Set the page title
+    page_title = f"{tag_name} - Tag - "
     context.update({
       "page_title": page_title
     })
