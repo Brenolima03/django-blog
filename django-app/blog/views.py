@@ -1,7 +1,8 @@
 from typing import Any
 from django.core.paginator import Paginator
 from django.db.models.query import QuerySet
-from django.shortcuts import get_object_or_404, render
+from django.http import HttpRequest
+from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 from django.contrib.auth.models import User
 from django.views.generic import ListView
@@ -52,7 +53,6 @@ class CreatedByListView(PostListView):
 
   def get(self, request, *args, **kwargs):
     self.author_pk = self.kwargs.get('author_pk')
-    # Use get_object_or_404 to fetch the user or raise 404 if not found
     self.user = get_object_or_404(User, pk=self.author_pk)
     return super().get(request, *args, **kwargs)
 
@@ -88,31 +88,38 @@ class TagListView(PostListView):
     })
     return context
 
-def search(request):
-  search_value = request.GET.get("search", "").strip()
-  if not search_value:
-    return render(request, "blog/pages/index.html", {"page_obj": [], "search_value": search_value, "page_title": "Search - "})
+class SearchListView(PostListView):
+  def __init__(self, *args, **kwargs):
+    super().__init__(*args, **kwargs)
+    self._search_value = ""
 
-  posts = (
-    Post.objects.get_published()
-    .filter(
+  def setup(self, request: HttpRequest, *args: Any, **kwargs: Any) -> None:
+    self._search_value = request.GET.get("search", "").strip()
+    return super().setup(request, *args, **kwargs)
+
+  def get_queryset(self) -> QuerySet[Any]:
+    search_value = self._search_value
+
+    return super().get_queryset().filter(
       Q(title__icontains=search_value) |
       Q(excerpt__icontains=search_value) |
       Q(content__icontains=search_value) |
       Q(tags__name__icontains=search_value)
+      .distinct()[:PER_PAGE]
     )
-    .distinct()
-  )
-  page_obj = paginate_queryset(request, posts)
-  return render(
-    request,
-    "blog/pages/index.html",
-    {
-      "page_obj": page_obj,
-      "search_value": search_value,
-      "page_title": f"{search_value[:30]} - Search - "
-    }
-  )
+
+  def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+    context = super().get_context_data(**kwargs)
+    search_value = self._search_value
+    context.update({
+      "page_title": f"{search_value[:30]} - Search - ",
+      "search_value": search_value
+    })
+
+  def get(self, request, *args, **kwargs):
+    if self._search_value == "":
+      return redirect("blog:index")
+    return super().get(request, *args, **kwargs)
 
 def page(request, slug):
   page_obj = get_object_or_404(Page, is_published=True, slug=slug)
