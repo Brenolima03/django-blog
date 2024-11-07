@@ -5,7 +5,7 @@ from django.http import HttpRequest
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
 from django.contrib.auth.models import User
-from django.views.generic import ListView
+from django.views.generic import ListView, DetailView
 from blog.models import Post, Page
 
 PER_PAGE = 9
@@ -43,7 +43,6 @@ class CreatedByListView(PostListView):
     ctx.update({
       'page_title': page_title,
     })
-
     return ctx
 
   def get_queryset(self) -> QuerySet[Any]:
@@ -105,8 +104,7 @@ class SearchListView(PostListView):
       Q(excerpt__icontains=search_value) |
       Q(content__icontains=search_value) |
       Q(tags__name__icontains=search_value)
-      .distinct()[:PER_PAGE]
-    )
+    ).distinct()[:PER_PAGE]
 
   def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
     context = super().get_context_data(**kwargs)
@@ -115,23 +113,30 @@ class SearchListView(PostListView):
       "page_title": f"{search_value[:30]} - Search - ",
       "search_value": search_value
     })
+    return context
 
   def get(self, request, *args, **kwargs):
     if self._search_value == "":
       return redirect("blog:index")
     return super().get(request, *args, **kwargs)
 
-def page(request, slug):
-  page_obj = get_object_or_404(Page, is_published=True, slug=slug)
-  page_title = f"{page_obj.title} - Page - "
-  return render(
-    request,
-    "blog/pages/page.html",
-    {
-      "page": page_obj,
+class PageDetailView(DetailView):
+  model = Page
+  template_name = "blog/pages/page.html"
+  slug_field = "slug"
+  context_object_name = "page"
+
+  def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+    context = super().get_context_data(**kwargs)
+    page = self.get_object()
+    page_title = f"{page.title} - Page - "
+    context.update({
       "page_title": page_title
-    }
-  )
+    })
+    return context
+
+  def get_queryset(self) -> QuerySet[Any]:
+    return super().get_queryset().filter(is_published=True)
 
 def post(request, slug):
   post_obj = get_object_or_404(Post, slug=slug)
