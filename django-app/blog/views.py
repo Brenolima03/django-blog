@@ -57,20 +57,21 @@ class CreatedByListView(PostListView):
     self.user = get_object_or_404(User, pk=self.author_pk)
     return super().get(request, *args, **kwargs)
 
-def category(request, slug):
-  posts = Post.objects.get_published().filter(category__slug=slug)
-  page_obj = paginate_queryset(request, posts)
-  if not page_obj:
-    raise Http404()
-  page_title = f"{page_obj[0].category.name} - Category - "
-  return render(
-    request,
-    "blog/pages/index.html",
-    {
-      "page_obj": page_obj,
+class CategoryListView(PostListView):
+  allow_empty = False
+
+  def get_queryset(self) -> QuerySet[Any]:
+    return super().get_queryset().filter(
+      category__slug=self.kwargs.get("slug")
+    )
+
+  def get_context_data(self, **kwargs) -> dict[str, Any]:
+    context = super().get_context_data(**kwargs)
+    page_title = f"{self.object_list[0].category.name} - Category - "
+    context.update({
       "page_title": page_title
-    }
-  )
+    })
+    return context
 
 def tag(request, slug):
   posts = Post.objects.get_published().filter(tags__slug=slug)
