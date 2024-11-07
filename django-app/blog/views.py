@@ -11,17 +11,10 @@ from blog.models import Post, Page
 PER_PAGE = 9
 
 class PostListView(ListView):
-  model = Post
   template_name = "blog/pages/index.html"
   context_object_name = "posts"
-  ordering = "-pk"
   paginate_by = PER_PAGE
   queryset = Post.objects.get_published()
-
-  # def get_queryset(self) -> QuerySet[Any]:
-  #   queryset = super().get_queryset()
-  #   queryset = queryset.filter(is_published=True)
-  #   return queryset
 
   def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
     context = super().get_context_data(**kwargs)
@@ -34,18 +27,6 @@ def paginate_queryset(request, queryset):
   paginator = Paginator(queryset, PER_PAGE)
   page_number = request.GET.get("page")
   return paginator.get_page(page_number)
-
-def index(request):
-  posts = Post.objects.get_published()
-  page_obj = paginate_queryset(request, posts)
-  return render(
-    request,
-    "blog/pages/index.html",
-    {
-      "page_obj": page_obj,
-      "page_title": "Home - "
-    }
-  )
 
 def created_by(request, author_pk):
   user = get_object_or_404(User, pk=author_pk)
