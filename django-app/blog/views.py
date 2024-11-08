@@ -1,11 +1,11 @@
 from typing import Any
+from django.shortcuts import get_object_or_404, redirect
+from django.views.generic import ListView, DetailView
 from django.core.paginator import Paginator
+from django.contrib.auth.models import User
 from django.db.models.query import QuerySet
 from django.http import HttpRequest
-from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Q
-from django.contrib.auth.models import User
-from django.views.generic import ListView, DetailView
 from blog.models import Post, Page
 
 PER_PAGE = 9
@@ -148,14 +148,20 @@ class PageDetailView(DetailView):
   def get_queryset(self) -> QuerySet[Any]:
     return super().get_queryset().filter(is_published=True)
 
-def post(request, slug):
-  post_obj = get_object_or_404(Post, slug=slug)
-  page_title = f"{post_obj.title} - Post - "
-  return render(
-    request,
-    "blog/pages/post.html",
-    {
-      "post": post_obj,
+class PostDetailView(DetailView):
+  model = Post
+  template_name = "blog/pages/post.html"
+  slug_field = "slug"
+  context_object_name = "post"
+
+  def get_context_data(self, **kwargs: Any) -> dict[str, Any]:
+    context = super().get_context_data(**kwargs)
+    post = self.get_object()
+    page_title = f"{post.title} - Post - "
+    context.update({
       "page_title": page_title
-    }
-  )
+    })
+    return context
+
+  def get_queryset(self) -> QuerySet[Any]:
+    return super().get_queryset().filter(is_published=True)
